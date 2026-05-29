@@ -1,5 +1,5 @@
 import type { IApiError } from '@/shared/types/types.ts';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation } from '@tanstack/react-query';
 import axios, { AxiosError } from 'axios';
 
 export const useUpload = () => {
@@ -20,13 +20,4 @@ export const useUpload = () => {
 
 		retry: false,
 	});
-};
-
-export const useGetMedia = () => {
-	return useQuery({
-		queryKey: ['media', 'get'],
-		queryFn: () => {
-
-		},
-	})
 };
