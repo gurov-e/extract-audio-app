@@ -1,0 +1,65 @@
+services:
+  postgres-db:
+    container_name: postgres
+    image: postgres:18.3-alpine3.23
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: extract-audio-app
+      PGDATA: /data/postgres
+    volumes:
+      - db:/data/postgres
+    ports:
+      - "5432:5432"
+    networks:
+      - extract-audio-app
+    restart: unless-stopped
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres -d extract-audio-app" ]
+      interval: 15s
+      timeout: 3s
+      retries: 5
+      start_period: 3s
+
+  app-back:
+    container_name: extract-audio-app-back
+    build:
+      context: .
+      dockerfile: backend/deploy/Dockerfile
+    environment:
+      DB_HOST: postgres-db
+      DB_PORT: 5432
+      DB_USERNAME: postgres
+      DB_PASSWORD: postgres
+      DB_DATABASE: extract-audio-app
+    volumes:
+      - uploads:/opt/extract-audio-app/uploads
+    ports:
+      - "3000:3000"
+    networks:
+      - extract-audio-app
+    restart: unless-stopped
+    depends_on:
+      postgres-db:
+        condition: service_healthy
+
+  app-front:
+    container_name: extract-audio-app-front
+    build:
+      context: .
+      dockerfile: frontend/deploy/Dockerfile
+      args:
+        VITE_API_URL: http://app-back:3000
+    ports:
+      - "8080:8080"
+    networks:
+      - extract-audio-app
+    restart: unless-stopped
+
+networks:
+  extract-audio-app:
+    driver: bridge
+
+volumes:
+  db:
+  uploads:
